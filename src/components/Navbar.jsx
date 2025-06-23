@@ -1,7 +1,30 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
+import { useClerk, useUser, UserButton } from "@clerk/clerk-react";
 
+// Book Icon Component
+const BookIcon = () => (
+  <svg
+    className="w-4 h-4 text-gray-700"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="M5 19V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v15M5 19a2 2 0 0 0 2 2h12M9 3v14m7 0v4"
+    />
+  </svg>
+);
+
+// Navbar Component
 const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
@@ -12,6 +35,10 @@ const Navbar = () => {
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { openSignIn } = useClerk();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -23,7 +50,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={` bg-slate-100 fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${
+      className={`bg-slate-100 fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${
         isScrolled
           ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4"
           : "py-4 md:py-6"
@@ -46,9 +73,14 @@ const Navbar = () => {
             <div className="bg-black h-0.5 w-0 group-hover:w-full transition-all duration-300" />
           </a>
         ))}
-        <button className="border px-4 py-1 text-sm  rounded-full cursor-pointer text-black transition-all">
-          Dashboard
-        </button>
+        {user && (
+          <button
+            className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
+            onClick={() => navigate("/owner")}
+          >
+            Dashboard
+          </button>
+        )}
       </div>
 
       {/* Desktop Right */}
@@ -56,20 +88,48 @@ const Navbar = () => {
         <img
           src={assets.searchIcon}
           alt="search-icon"
-          className={` invert h-7 transition-all duration-500 `}
+          className="invert h-7 transition-all duration-500"
         />
-        <button className="bg-slate border border-gray-500 text-black px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
-          Login
-        </button>
+        {user ? (
+          <UserButton>
+            <UserButton.MenuItems>
+              <UserButton.Action
+                label="My Bookings"
+                labelIcon={<BookIcon />}
+                onClick={() => navigate("/my-bookings")}
+              />
+            </UserButton.MenuItems>
+          </UserButton>
+        ) : (
+          <button
+            onClick={openSignIn}
+            className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500 cursor-pointer"
+          >
+            Login
+          </button>
+        )}
       </div>
 
       {/* Mobile Menu Button */}
       <div className="flex items-center gap-3 md:hidden">
+        {/* Mobile Menu Button */}
+        {user && (
+          <UserButton>
+            <UserButton.MenuItems>
+              <UserButton.Action
+                label="My Bookings"
+                labelIcon={<BookIcon />}
+                onClick={() => navigate("/my-bookings")}
+              />
+            </UserButton.MenuItems>
+          </UserButton>
+        )}
+
         <img
           src={assets.menuIcon}
           alt="menu-icon"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className={`invert h-4 transition-all duration-500 `}
+          className="invert h-4 transition-all duration-500 cursor-pointer"
         />
       </div>
 
@@ -97,13 +157,31 @@ const Navbar = () => {
           </a>
         ))}
 
-        <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all text-black">
-          Dashboard
-        </button>
+        {user && (
+          <>
+            <button
+              className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all text-black"
+              onClick={() => {
+                navigate("/owner");
+                setIsMenuOpen(false);
+              }}
+            >
+              Dashboard
+            </button>
+          </>
+        )}
 
-        <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-          Login
-        </button>
+        {!user && (
+          <button
+            onClick={() => {
+              openSignIn();
+              setIsMenuOpen(false);
+            }}
+            className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
+          >
+            Login
+          </button>
+        )}
       </div>
     </nav>
   );
