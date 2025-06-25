@@ -38,9 +38,11 @@ import uploadArea from "./uploadArea.svg";
 import totalBookingIcon from "./totalBookingIcon.svg";
 import totalRevenueIcon from "./totalRevenueIcon.svg";
 import YellowHighlight from "./YellowHighlight.png";
+import gradient from "./gradient.avif";
 
 export const assets = {
   YellowHighlight,
+  gradient,
   logo,
   searchIcon,
   userIcon,
