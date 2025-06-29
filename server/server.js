@@ -14,7 +14,7 @@ APP.use(cors());
 APP.use(express.json());
 APP.use(clerkMiddleware());
 
-// API TO LISTEN CLERK WEBHOOKS
+// API TO LISTEN CLERK WEBHOOKSß
 APP.use("/api/clerk", clerkWebhooks);
 
 APP.get("/", (req, res) => res.send("API IS WORKING"));
