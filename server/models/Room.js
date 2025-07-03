@@ -3,13 +3,13 @@ import mongoose from "mongoose";
 const roomSchema = new mongoose.Schema(
   {
     hotel: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String, // Clerk or your string-based hotel IDs
       ref: "Hotel",
       required: true,
     },
     roomType: { type: String, required: true },
     pricePerNight: { type: Number, required: true },
-    amenities: { type: String, required: true },
+    amenities: [{ type: String, required: true }],
     images: [{ type: String, required: true }],
     isAvailable: { type: Boolean, default: true },
   },

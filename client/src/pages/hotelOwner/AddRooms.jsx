@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useAppContext } from "../../Context/AppContext";
 
 const AddRooms = () => {
+  const { getToken } = useAppContext();
+
   const [images, setImages] = useState({
     1: null,
     2: null,
@@ -22,8 +27,66 @@ const AddRooms = () => {
     },
   });
 
+  const [loading, setLoading] = useState(false);
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    if (
+      !inputs.roomType ||
+      !inputs.pricePerNight ||
+      !inputs.amenities ||
+      !Object.values(images).some((image) => image)
+    ) {
+      toast.error("Please fill in all the details");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("roomType", inputs.roomType);
+      formData.append("pricePerNight", inputs.pricePerNight);
+
+      // Converting Amenities to Array & keeping only enabled Amenities
+      const amenities = Object.keys(inputs.amenities).filter(
+        (key) => inputs.amenities[key]
+      );
+      formData.append("amenities", JSON.stringify(amenities));
+
+      // Adding Images to FormData
+      Object.keys(images).forEach((key) => {
+        images[key] && formData.append("images", images[key]);
+      });
+
+      const { data } = await axios.post("/api/rooms/", formData, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        setInputs({
+          roomType: "",
+          pricePerNight: 0,
+          amenities: {
+            "Free WiFi": false,
+            "Free Breakfast": false,
+            "Room Service": false,
+            "Mountain View": false,
+            "Pool Access": false,
+          },
+        });
+        setImages({ 1: null, 2: null, 3: null, 4: null });
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <form>
+    <form onSubmit={onSubmitHandler}>
       <Title
         align="left"
         font="outfit"
@@ -109,8 +172,11 @@ const AddRooms = () => {
           </div>
         ))}
       </div>
-      <button className="bg-primary text-white px-8 py-2 rounded mt-8 cursor-pointer">
-        Add Room
+      <button
+        className="bg-primary text-white px-8 py-2 rounded mt-8 cursor-pointer"
+        disabled={loading}
+      >
+        {loading ? "Adding..." : "Add Room"}
       </button>
     </form>
   );
