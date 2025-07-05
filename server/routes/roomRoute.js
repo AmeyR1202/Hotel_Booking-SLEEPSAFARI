@@ -13,6 +13,6 @@ const roomRouter = express.Router();
 roomRouter.post("/", protect, upload.array("images", 4), createRoom);
 roomRouter.get("/", getRooms);
 roomRouter.get("/owner", protect, getOwnerRooms);
-roomRouter.get("/toogle-availability", protect, toggleRoomAvailability);
+roomRouter.post("/toggle-availability", protect, toggleRoomAvailability);
 
 export default roomRouter;
