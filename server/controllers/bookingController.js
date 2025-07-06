@@ -1,8 +1,11 @@
+import transporter from "../configs/nodemailer.js";
 import Booking from "../models/Bookings.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 
+// =========================
 // Function to Check Availability of Room
+// =========================
 const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
     const bookings = await Booking.find({
@@ -10,19 +13,18 @@ const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
       checkInDate: { $lte: checkOutDate },
       checkOutDate: { $gte: checkInDate },
     });
-
-    const isAvailable = bookings.length === 0;
-    return isAvailable;
+    return bookings.length === 0;
   } catch (error) {
     console.error(error.message);
+    return false;
   }
 };
 
 export default checkAvailability;
 
-// API to check room availability
-// POST api/bookings/check-availability
-
+// =========================
+// API: POST /api/bookings/check-availability
+// =========================
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate } = req.body;
@@ -37,15 +39,15 @@ export const checkAvailabilityAPI = async (req, res) => {
   }
 };
 
-// API to create a new booking
-// POST /api/bookings/book
-
+// =========================
+// API: POST /api/bookings/book
+// =========================
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
     const user = req.user._id;
 
-    // Before Booking Check Availability
+    // Check availability first
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
@@ -56,17 +58,17 @@ export const createBooking = async (req, res) => {
       return res.json({ success: false, message: "Room is not available" });
     }
 
-    // GET total price from room
+    // Calculate total price
     const roomData = await Room.findById(room).populate("hotel");
     let totalPrice = roomData.pricePerNight;
 
-    // Calculate totalPrice based on nights
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
-    const timeDiff = checkOut.getTime() - checkIn.getTime();
+    const timeDiff = checkOut - checkIn;
     const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
     totalPrice *= nights;
+
+    // Create the booking
     const booking = await Booking.create({
       user,
       room,
@@ -77,39 +79,69 @@ export const createBooking = async (req, res) => {
       totalPrice,
     });
 
+    // Send confirmation email
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: req.user.email,
+      subject: "Hotel Booking Details",
+      html: `
+        <h2>Your Booking Details</h2>
+        <p>Dear ${req.user.username},</p>
+        <p>Thank you for your booking! Here are your details:</p>
+        <ul>
+          <li><strong>Booking ID:</strong> ${booking._id}</li>
+          <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+          <li><strong>Location:</strong> ${roomData.hotel.address}</li>
+          <li><strong>Check-In:</strong> ${booking.checkInDate.toDateString()}</li>
+          <li><strong>Check-Out:</strong> ${booking.checkOutDate.toDateString()}</li>
+          <li><strong>Total:</strong> ${process.env.CURRENCY || "$"} ${
+        booking.totalPrice
+      }</li>
+        </ul>
+        <p>We look forward to welcoming you! If you need to make any changes, feel free to contact us.</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.json({ success: true, message: "Booking created successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: "Failed to create Booking" });
   }
 };
 
-// API to get all bookings for a user
-// GET /api/bookings/user
+// =========================
+// API: GET /api/bookings/user
+// =========================
 export const getUserBookings = async (req, res) => {
   try {
     const user = req.user._id;
     const bookings = await Booking.find({ user })
       .populate("room hotel")
       .sort({ createdAt: -1 });
+
     res.json({ success: true, bookings });
   } catch (error) {
     res.json({ success: false, message: "Failed to fetch bookings" });
   }
 };
 
+// =========================
+// API: GET /api/bookings/hotel
+// =========================
 export const getHotelBookings = async (req, res) => {
   try {
-    const hotel = await Hotel.FindOne({ owner: req.auth.userId });
+    const hotel = await Hotel.findOne({ owner: req.auth.userId });
     if (!hotel) {
       return res.json({ success: false, message: "No Hotel found" });
     }
+
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user")
       .sort({ createdAt: -1 });
-    // Total Bookings
+
     const totalBookings = bookings.length;
-    // Total Revenue
     const totalRevenue = bookings.reduce(
       (acc, booking) => acc + booking.totalPrice,
       0
