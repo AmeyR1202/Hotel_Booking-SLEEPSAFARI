@@ -1,7 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { assets, cities } from "../assets/assets";
+import { useAppContext } from "../Context/AppContext";
 
 const Hero = () => {
+  const { navigate, getToken, axios, setSearchedCities } = useAppContext();
+  const [destination, setDestination] = useState("");
+  const onSearch = async (e) => {
+    e.preventDefault();
+    navigate(`/rooms?destination=${destination}`);
+    // call api to save recent searched city
+    await axios.post(
+      "/api/user/store-recent-search",
+      { recentSearchedCity: destination },
+      { headers: { Authorization: `Bearer ${await getToken()}` } }
+    );
+
+    // add destination to searchedCities max 3 recent searched cities
+    setSearchedCities((prevSearchedCities) => {
+      const updatedSearchedCities = [...prevSearchedCities, destination];
+      if (updatedSearchedCities.length > 3) {
+        updatedSearchedCities.shift();
+      }
+      return updatedSearchedCities;
+    });
+  };
+
   return (
     <div className="flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white h-screen">
       {/* Centered Heading with Curved Highlight on SleepSafari */}
@@ -34,7 +57,10 @@ const Hero = () => {
       </p>
 
       {/* Modern Hotel Booking Form */}
-      <div className="flex flex-wrap lg:flex-nowrap items-center gap-4 mt-10 w-full bg-blue-50 bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-xl">
+      <form
+        onSubmit={onSearch}
+        className="flex flex-wrap lg:flex-nowrap items-center gap-4 mt-10 w-full bg-blue-50 bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-xl"
+      >
         {/* Location */}
         <div className="flex flex-col flex-1 min-w-[180px]">
           <label className="text-sm font-medium text-gray-700 mb-1">
@@ -42,6 +68,8 @@ const Hero = () => {
           </label>
           <div className="text-black">
             <input
+              onChange={(e) => setDestination(e.target.value)}
+              value={destination}
               list="destinations"
               id="destinationInput"
               type="text"
@@ -94,11 +122,14 @@ const Hero = () => {
 
         {/* Search Button */}
         <div className="flex justify-center mt-4 lg:mt-4 flex-shrink-0 w-full lg:w-auto">
-          <button className="bg-blue-600 hover:bg-blue-700 transition-all text-white font-medium px-6 py-3 rounded-full shadow-md">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 transition-all text-white font-medium px-6 py-3 rounded-full shadow-md"
+          >
             Search Hotels
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };
