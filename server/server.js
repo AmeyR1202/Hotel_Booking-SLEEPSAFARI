@@ -9,23 +9,18 @@ import hotelRouter from "./routes/hotelRoute.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import roomRouter from "./routes/roomRoute.js";
 import bookingRouter from "./routes/bookingRoutes.js";
-import fs from "fs";
 
 connectDB();
 connectCloudinary();
 
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
-}
-
 const APP = express();
 APP.use(cors());
 
-//Middlewares
+// Middlewares
 APP.use(express.json());
 APP.use(clerkMiddleware());
 
-// API TO LISTEN CLERK WEBHOOKSß
+// API to listen Clerk webhooks
 APP.use("/api/clerk", clerkWebhooks);
 
 APP.get("/", (req, res) => res.send("API IS WORKING"));

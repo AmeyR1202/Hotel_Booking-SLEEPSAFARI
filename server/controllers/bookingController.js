@@ -77,6 +77,7 @@ export const createBooking = async (req, res) => {
       checkInDate,
       checkOutDate,
       totalPrice,
+      paymentMethod: "Pay At Hotel",
     });
 
     // Send confirmation email
