@@ -26,13 +26,12 @@ const Hero = () => {
   };
 
   return (
-    <div className="flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 md:px-16 lg:px-24 xl:px-32 text-white pt-16">
       {/* Centered Heading with Curved Highlight on SleepSafari */}
       <div className="w-full flex justify-center text-center relative">
-        <h1 className="text-black text-5xl md:text-7xl font-outfit font-bold max-w-4xl relative inline-block">
+        <h1 className="mt-8 md:mt-0 text-black text-5xl md:text-7xl font-outfit font-bold max-w-4xl relative inline-block">
           End Your Search With{" "}
           <span className="relative inline-block px-3 pb-1">
-            {/* Highlight image behind text */}
             <img
               src={assets.YellowHighlight}
               alt=""
@@ -44,11 +43,11 @@ const Hero = () => {
       </div>
 
       {/* Intro Text */}
-      <p className="bg-blue-300 text-black px-3.5 py-1 rounded-full mt-20">
+      <p className="self-start text-left bg-blue-300 text-black px-3.5 py-1 rounded-full mt-20">
         The Ultimate Hotel Experience...
       </p>
 
-      <h1 className="font-playfair text-black text-2xl md:text-5xl md:leading-[55px] font-bold md:font-extrabold max-w-xl mt-2">
+      <h1 className="self-start text-left font-playfair text-black text-2xl md:text-5xl md:leading-[55px] font-bold md:font-extrabold max-w-xl mt-2">
         Discover Your Next Perfect Destination
       </h1>
 
