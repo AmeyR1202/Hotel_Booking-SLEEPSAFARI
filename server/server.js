@@ -16,6 +16,8 @@ connectCloudinary();
 const APP = express();
 APP.use(cors());
 
+// API TO LISTEN STRIPE WEBHOOKS
+
 // Middlewares
 APP.use(express.json());
 APP.use(clerkMiddleware());
