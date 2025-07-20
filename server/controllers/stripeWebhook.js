@@ -3,7 +3,6 @@ import Booking from "../models/Bookings.js";
 
 // API to handle Stripe Webhooks
 export const stripeWebhooks = async (request, response) => {
-  // Stripe Gateway Initialize
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
   const sig = request.headers["stripe-signature"];
   let event;
@@ -15,8 +14,11 @@ export const stripeWebhooks = async (request, response) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
+    console.error(`Webhook Error: ${err.message}`);
+    return response.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  // Handle the payment_intent.succeeded event
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
     const paymentIntentId = paymentIntent.id;
@@ -27,6 +29,7 @@ export const stripeWebhooks = async (request, response) => {
     });
 
     const { bookingId } = session.data[0].metadata;
+
     // Mark Payment as Paid
     await Booking.findByIdAndUpdate(bookingId, {
       isPaid: true,
@@ -35,5 +38,6 @@ export const stripeWebhooks = async (request, response) => {
   } else {
     console.log("Unhandled event type :", event.type);
   }
+
   response.json({ received: true });
 };
